@@ -1,0 +1,634 @@
+/* ==========================================================================
+   OSB Protocol Bridge Cockpit - Design System & Styles
+   ========================================================================== */
+
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(59, 130, 246, 0.3);
+
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-purple: #8b5cf6;
+
+  --gradient-brand: linear-gradient(135deg, #2563eb, #06b6d4);
+  --gradient-success: linear-gradient(135deg, #059669, #10b981);
+  --gradient-warning: linear-gradient(135deg, #d97706, #f59e0b);
+  --gradient-danger: linear-gradient(135deg, #e11d48, #f43f5e);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  --shadow-glow-blue: 0 0 25px rgba(59, 130, 246, 0.25);
+  --shadow-glow-green: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  line-height: 1.5;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.06) 0%, transparent 40%);
+}
+
+.app-container {
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ==========================================================================
+   Header & Status Bar
+   ========================================================================== */
+
+header.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--gradient-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: var(--shadow-glow-blue);
+}
+
+.brand-title h1 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff, #93c5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-title p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.protocol-tag {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.protocol-tag.active {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-emerald);
+  box-shadow: 0 0 10px var(--accent-emerald);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* ==========================================================================
+   Metrics Row
+   ========================================================================== */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
+}
+
+.metric-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #ffffff;
+}
+
+.metric-meta {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   Architecture Pipeline Visualizer
+   ========================================================================== */
+
+.pipeline-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pipeline-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow-x: auto;
+  padding: 20px 10px;
+  gap: 8px;
+}
+
+.pipe-node {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 170px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pipe-node.active-pulse {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  transform: scale(1.04);
+}
+
+.pipe-node .node-protocol {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.pipe-node .node-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.pipe-node .node-desc {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.pipe-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  padding: 0 6px;
+  position: relative;
+}
+
+.pipe-arrow .arrow-label {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Two Column Layout (Workbench + Results/Inspector)
+   ========================================================================== */
+
+.grid-workbench {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+  .grid-workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Form Styles */
+.presets-group {
+  margin-bottom: 18px;
+}
+
+.presets-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-preset {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-blue);
+  color: #fff;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.form-group input, 
+.form-group select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.btn-primary {
+  flex: 1;
+  background: var(--gradient-brand);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 12px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--shadow-glow-blue);
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 12px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   Decision Result Card & Packet Inspector
+   ========================================================================== */
+
+.result-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.result-placeholder {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+
+.decision-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+}
+
+.decision-badge.ACCEPT {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--accent-emerald);
+  color: #34d399;
+}
+
+.decision-badge.REFER_ELIGIBLE {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--accent-amber);
+  color: #fbbf24;
+}
+
+.decision-badge.DECLINE {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid var(--accent-rose);
+  color: #fb7185;
+}
+
+.hop-telemetry-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+}
+
+.hop-item span {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  margin-bottom: 2px;
+}
+
+/* ==========================================================================
+   Realtime Hop Audit Trail & Tab Panels
+   ========================================================================== */
+
+.tabs-nav {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 18px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tab-btn.active {
+  color: var(--accent-cyan);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-cyan);
+}
+
+.audit-table-wrapper {
+  overflow-x: auto;
+  max-height: 380px;
+}
+
+table.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+table.audit-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+table.audit-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-family: var(--font-mono);
+}
+
+.stage-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.stage-pill.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.stage-pill.warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.stage-pill.danger {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+/* ==========================================================================
+   Architecture & Scenario Guide Cards
+   ========================================================================== */
+
+.scenario-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.scenario-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.scenario-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #93c5fd;
+}
+
+.scenario-card p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}

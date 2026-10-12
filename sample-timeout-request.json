@@ -1,0 +1,13 @@
+{
+  "borrowerName": "David Sterling (Timeout Test)",
+  "borrowerSsn": "999-00-1111",
+  "loanAmount": 350000.00,
+  "propertyValue": 480000.00,
+  "monthlyIncome": 12000.00,
+  "monthlyDebt": 2000.00,
+  "creditScore": 740,
+  "loanPurpose": "PURCHASE",
+  "propertyType": "SINGLE_FAMILY",
+  "loanTermMonths": 360,
+  "simulateTimeout": true
+}

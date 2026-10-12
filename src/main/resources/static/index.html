@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSB Protocol Bridge Pattern | Realtime Mortgage Decisioning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header-bar">
+            <div class="brand-wrapper">
+                <div class="brand-icon">⚡</div>
+                <div class="brand-title">
+                    <h1>OSB Protocol Bridge Pattern Cockpit</h1>
+                    <p>Real-Time Synchronous-to-Asynchronous Messaging Mediator | Freddie Mac LPA Underwriting Bridge</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <div class="protocol-tag active">
+                    <span class="pulse-dot"></span>
+                    <span>HTTP REST (8080)</span>
+                </div>
+                <div class="protocol-tag active">
+                    <span class="pulse-dot"></span>
+                    <span>JMS 2.0 (Artemis In-VM)</span>
+                </div>
+                <div class="protocol-tag active">
+                    <span class="pulse-dot"></span>
+                    <span>WebSocket STOMP</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Metrics Row -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Bridged Requests</div>
+                <div class="metric-value" id="metric-total-requests">0</div>
+                <div class="metric-meta">HTTP ➔ JMS mediated</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Success Rate</div>
+                <div class="metric-value" id="metric-success-rate">100%</div>
+                <div class="metric-meta" id="metric-success-count">0 approved / processed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Average Bridge Latency</div>
+                <div class="metric-value" id="metric-avg-latency">0 ms</div>
+                <div class="metric-meta" id="metric-minmax-latency">Min: 0ms | Max: 0ms</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Correlated Threads</div>
+                <div class="metric-value" id="metric-active-correlations">0</div>
+                <div class="metric-meta">Pending JMSCorrelationID</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">SLA Timeout Faults</div>
+                <div class="metric-value" id="metric-timeouts" style="color: var(--accent-rose);">0</div>
+                <div class="metric-meta">RFC 7807 Gateway Timeouts</div>
+            </div>
+        </section>
+
+        <!-- Visual Pipeline Architecture -->
+        <section class="pipeline-card">
+            <div class="section-header">
+                <h2><span>🔀</span> Real-Time Protocol Bridging Pipeline</h2>
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+                    Pattern: Synchronous Request-Reply with Dynamic JMSCorrelationID
+                </div>
+            </div>
+            <div class="pipeline-diagram">
+                <div class="pipe-node" id="node-client">
+                    <div class="node-protocol">Protocol: HTTP/1.1</div>
+                    <div class="node-name">Client Portal</div>
+                    <div class="node-desc">JSON REST Request</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">POST /sync</span>
+                </div>
+                <div class="pipe-node" id="node-adapter-in">
+                    <div class="node-protocol">OSB Inbound</div>
+                    <div class="node-name">Proxy Adapter</div>
+                    <div class="node-desc">Validate & Extract Token</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">Transform</span>
+                </div>
+                <div class="pipe-node" id="node-bridge-core">
+                    <div class="node-protocol">OSB Pipeline</div>
+                    <div class="node-name">Protocol Bridge</div>
+                    <div class="node-desc">JSON ➔ Canonical Model</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">JMS Send</span>
+                </div>
+                <div class="pipe-node" id="node-req-queue">
+                    <div class="node-protocol">JMS ANYCAST</div>
+                    <div class="node-name">Request Queue</div>
+                    <div class="node-desc">freddie.lpa.loan.request</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">JMS Listen</span>
+                </div>
+                <div class="pipe-node" id="node-aus-engine">
+                    <div class="node-protocol">Enterprise Core</div>
+                    <div class="node-name">AUS Engine</div>
+                    <div class="node-desc">LPA Underwriting Rules</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">ReplyTo</span>
+                </div>
+                <div class="pipe-node" id="node-reply-queue">
+                    <div class="node-protocol">JMS ANYCAST</div>
+                    <div class="node-name">Reply Queue</div>
+                    <div class="node-desc">freddie.lpa.loan.reply</div>
+                </div>
+                <div class="pipe-arrow">
+                    <span>➔</span>
+                    <span class="arrow-label">Correlate</span>
+                </div>
+                <div class="pipe-node" id="node-bridge-out">
+                    <div class="node-protocol">OSB Correlator</div>
+                    <div class="node-name">Outbound Adapter</div>
+                    <div class="node-desc">Canonical ➔ REST Response</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workbench -->
+        <div class="grid-workbench">
+            <!-- Left Column: Request Form -->
+            <div class="panel-card">
+                <div class="section-header">
+                    <h2><span>📝</span> Submit Loan Application</h2>
+                </div>
+
+                <!-- Scenario Presets -->
+                <div class="presets-group">
+                    <div class="presets-label">Quick Scenario Presets:</div>
+                    <div class="preset-buttons">
+                        <button class="btn-preset" id="preset-prime" onclick="loadScenario('prime')">✅ Conforming Prime (Auto Approve)</button>
+                        <button class="btn-preset" id="preset-refer" onclick="loadScenario('refer')">⚠️ High LTV / PMI (Refer Review)</button>
+                        <button class="btn-preset" id="preset-decline" onclick="loadScenario('decline')">❌ High DTI &gt; 50% (Decline)</button>
+                        <button class="btn-preset" id="preset-timeout" onclick="loadScenario('timeout')">⏱️ Simulate SLA Timeout Fault</button>
+                    </div>
+                </div>
+
+                <form id="loan-form" onsubmit="event.preventDefault(); submitLoanApplication(false);">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="borrowerName">Borrower Full Name</label>
+                            <input type="text" id="borrowerName" value="Eleanor Vance" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrowerSsn">Borrower SSN / ID</label>
+                            <input type="text" id="borrowerSsn" value="123-45-7890" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loanAmount">Loan Amount ($)</label>
+                            <input type="number" id="loanAmount" value="380000" min="10000" step="1000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyValue">Property Valuation ($)</label>
+                            <input type="number" id="propertyValue" value="500000" min="15000" step="1000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlyIncome">Gross Monthly Income ($)</label>
+                            <input type="number" id="monthlyIncome" value="14500" min="500" step="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlyDebt">Total Monthly Debt Obligations ($)</label>
+                            <input type="number" id="monthlyDebt" value="2800" min="0" step="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="creditScore">FICO Credit Score (300-850)</label>
+                            <input type="number" id="creditScore" value="775" min="300" max="850" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loanPurpose">Loan Purpose</label>
+                            <select id="loanPurpose">
+                                <option value="PURCHASE">PURCHASE</option>
+                                <option value="REFINANCE">RATE/TERM REFINANCE</option>
+                                <option value="CASH_OUT">CASH-OUT REFINANCE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyType">Property Type</label>
+                            <select id="propertyType">
+                                <option value="SINGLE_FAMILY">Single Family Residence</option>
+                                <option value="CONDO">Condominium</option>
+                                <option value="MULTI_FAMILY">Multi-Family (2-4 Units)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="loanTermMonths">Loan Term (Months)</label>
+                            <select id="loanTermMonths">
+                                <option value="360">30 Years (360 Months)</option>
+                                <option value="180">15 Years (180 Months)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="simulateTimeout">
+                        <label for="simulateTimeout" style="font-size: 0.8rem; color: #fca5a5; cursor: pointer;">
+                            Simulate backend delay &gt; 8s (Demonstrate Protocol Bridge SLA Gateway Timeout)
+                        </label>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn-primary" id="btn-submit-sync" onclick="submitLoanApplication(false)">
+                            <span>⚡</span> Execute Synchronous Bridge (HTTP/JMS)
+                        </button>
+                        <button type="button" class="btn-secondary" id="btn-submit-async" onclick="submitLoanApplication(true)">
+                            <span>📨</span> Async Ingest (HTTP 202)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column: Decision Result & Packet Inspector -->
+            <div class="panel-card">
+                <div class="section-header">
+                    <h2><span>🔍</span> Underwriting Decision & Bridge Inspector</h2>
+                    <span id="live-indicator" style="font-size: 0.75rem; color: var(--accent-emerald);">● Live Bridge Active</span>
+                </div>
+
+                <div class="result-box" id="result-container">
+                    <div class="result-placeholder">
+                        <p>No application submitted yet.</p>
+                        <p style="font-size: 0.75rem; margin-top: 6px;">Select a preset or enter details and click <strong>Execute Synchronous Bridge</strong>.</p>
+                    </div>
+                </div>
+
+                <!-- Tabs for Payloads and Scenarios -->
+                <div class="tabs-nav">
+                    <button class="tab-btn active" onclick="switchTab('audit')">Hop Audit Trail</button>
+                    <button class="tab-btn" onclick="switchTab('payload')">Last JSON/Canonical Payload</button>
+                    <button class="tab-btn" onclick="switchTab('scenarios')">Under Which Scenario to Use</button>
+                </div>
+
+                <!-- Tab 1: Audit Trail Table -->
+                <div id="tab-audit" class="tab-content">
+                    <div class="audit-table-wrapper">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th>Hop Stage</th>
+                                    <th>Protocol</th>
+                                    <th>Correlation ID</th>
+                                    <th>Elapsed</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 20px;">
+                                        Waiting for bridge transitions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Raw Payload Viewer -->
+                <div id="tab-payload" class="tab-content" style="display: none;">
+                    <pre id="payload-inspector-box" style="background: rgba(0,0,0,0.5); padding: 14px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.75rem; color: #a7f3d0; max-height: 340px; overflow: auto;">// Raw JSON / Enterprise Canonical Model will be displayed here upon execution.</pre>
+                </div>
+
+                <!-- Tab 3: Enterprise Scenarios Guide -->
+                <div id="tab-scenarios" class="tab-content" style="display: none;">
+                    <div class="scenario-card-grid">
+                        <div class="scenario-card">
+                            <h3><span>🏦</span> 1. Sync REST API to Async Enterprise Messaging</h3>
+                            <p>Web or mobile clients require immediate HTTP 200 responses, but backend core systems (e.g., Freddie Mac LPA, core banking) communicate over asynchronous JMS/IBM MQ queues. The bridge correlates synchronous callers using JMSCorrelationID without blocking threads.</p>
+                        </div>
+                        <div class="scenario-card">
+                            <h3><span>⚡</span> 2. Load Leveling & Burst Traffic Absorption</h3>
+                            <p>During sudden traffic surges (e.g., rate drop refi waves, Black Friday), direct synchronous calls would overwhelm core backends. The bridge enqueues messages, buffers bursts, and decouples consumers from internal engine capacity.</p>
+                        </div>
+                        <div class="scenario-card">
+                            <h3><span>🛡️</span> 3. DMZ & Network Security Boundary Isolation</h3>
+                            <p>Clients in untrusted external zones cannot open direct TCP socket connections or JMS broker sessions into the private intranet. The OSB Protocol Bridge lives in the proxy DMZ, terminating HTTP and bridging strictly over secured enterprise queues.</p>
+                        </div>
+                        <div class="scenario-card">
+                            <h3><span>🔄</span> 4. Modernization & Heterogeneous Service Bridging</h3>
+                            <p>Enables migrating monolithic backend systems from legacy SOAP/XML or JMS to modern JSON REST, gRPC, or WebSockets incrementally without forcing frontends to rewrite their integration contracts.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="/js/app.js"></script>
+</body>
+</html>

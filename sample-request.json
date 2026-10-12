@@ -1,0 +1,13 @@
+{
+  "borrowerName": "Eleanor Vance",
+  "borrowerSsn": "123-45-7890",
+  "loanAmount": 380000.00,
+  "propertyValue": 500000.00,
+  "monthlyIncome": 14500.00,
+  "monthlyDebt": 2800.00,
+  "creditScore": 775,
+  "loanPurpose": "PURCHASE",
+  "propertyType": "SINGLE_FAMILY",
+  "loanTermMonths": 360,
+  "simulateTimeout": false
+}

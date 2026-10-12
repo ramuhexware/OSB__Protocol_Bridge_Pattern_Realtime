@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: osb-protocol-bridge-realtime-app
+  artemis:
+    mode: embedded
+    embedded:
+      enabled: true
+      persistent: false
+      queues:
+        - freddie.lpa.loan.request.queue
+        - freddie.lpa.loan.reply.queue
+        - freddie.lpa.dlq
+      topics:
+        - freddie.lpa.notifications.topic
+
+bridge:
+  timeout-ms: 6000
+  request-queue: freddie.lpa.loan.request.queue
+  reply-queue: freddie.lpa.loan.reply.queue
+  notification-topic: freddie.lpa.notifications.topic
+  dlq: freddie.lpa.dlq
+  simulate-processing-delay-ms: 350
+
+logging:
+  level:
+    com.hexaware.protocolbridge: INFO
+    org.apache.activemq.artemis: WARN
+    org.springframework.jms: INFO

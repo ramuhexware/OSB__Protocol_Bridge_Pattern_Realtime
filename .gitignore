@@ -1,0 +1,264 @@
+# =============================================================================
+# .gitignore — Freddie Mac-Style Home Loan Platform
+# Multi-module Spring Boot | Maven | Docker | PostgreSQL | Oracle | DB2 | MongoDB
+# =============================================================================
+
+# =============================================================================
+# MAVEN BUILD OUTPUT
+# =============================================================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.properties
+# Keep maven-wrapper.jar in version control but ignore downloaded wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# Maven release plugin artifacts
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# =============================================================================
+# SPRING BOOT / JAVA
+# =============================================================================
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Spring Boot generated fat-jar originals
+*.jar.original
+
+# Logback / Log4j log files
+*.log
+logs/
+log/
+
+# Spring Boot temp files
+spring-shell.log
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+# Local override files (developer-specific compose overrides)
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Docker volumes / local data directories (if mounted to project)
+deployment/data/
+deployment/volumes/
+deployment/local-data/
+
+# =============================================================================
+# ENVIRONMENT & SECRETS — NEVER COMMIT THESE
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Spring Boot application-local profiles
+application-local.yml
+application-local.properties
+application-dev-local.yml
+application-dev-local.properties
+**/src/main/resources/application-local.*
+**/src/main/resources/application-secret.*
+
+# Keystores, certificates, private keys
+*.jks
+*.keystore
+*.truststore
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+
+# OAuth2 / JWT signing keys
+*.jwk
+*.jwks
+
+# =============================================================================
+# DATABASE CREDENTIAL FILES
+# =============================================================================
+# Oracle wallet files
+wallet/
+*.ora
+tnsnames.ora
+sqlnet.ora
+cwallet.sso
+ewallet.p12
+
+# DB2 configuration with passwords
+db2dsdriver.cfg
+
+# =============================================================================
+# IDE — IntelliJ IDEA
+# =============================================================================
+.idea/
+*.ipr
+*.iml
+*.iws
+out/
+.idea_modules/
+
+# IntelliJ code coverage
+coverage/
+
+# =============================================================================
+# IDE — Eclipse / STS (Spring Tool Suite)
+# =============================================================================
+.project
+.classpath
+.settings/
+bin/
+.springBeans
+.sts4-cache/
+.factorypath
+
+# =============================================================================
+# IDE — VS Code
+# =============================================================================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# =============================================================================
+# IDE — NetBeans
+# =============================================================================
+nb-configuration.xml
+nbactions.xml
+nb-configuration.xml
+
+# =============================================================================
+# OS — macOS
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# =============================================================================
+# OS — Windows
+# =============================================================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# =============================================================================
+# OS — Linux
+# =============================================================================
+*~
+
+# =============================================================================
+# EDITOR TEMP FILES
+# =============================================================================
+# Vim
+*.swp
+*.swo
+*.swn
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# PATCH / DIFF
+# =============================================================================
+*.orig
+*.rej
+*.patch
+
+# =============================================================================
+# FRONTEND (Node.js / npm / React)
+# =============================================================================
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/.cache/
+frontend/dist/
+frontend/build/
+frontend/.parcel-cache/
+frontend/coverage/
+frontend/.next/
+frontend/.nuxt/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.yarn-integrity
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# =============================================================================
+# WSDL GENERATED CODE (legacy-adapter-service)
+# =============================================================================
+# Uncomment below if WSDL-generated sources are auto-generated at build time
+# legacy-adapter-service/src/main/java/com/freddieapp/legacyadapter/wsdl/
+
+# =============================================================================
+# FLYWAY (customer-service)
+# =============================================================================
+# Flyway out-of-order migration backups — never commit
+**/src/main/resources/db/migration/*.bak
+
+# =============================================================================
+# ACTUATOR / MONITORING
+# =============================================================================
+# Prometheus metrics snapshots
+/metrics/
+prometheus-data/
+
+# =============================================================================
+# TEST REPORTS & COVERAGE
+# =============================================================================
+**/target/surefire-reports/
+**/target/failsafe-reports/
+**/target/site/
+jacoco.exec
+*.exec
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Compiled Python files (if any tooling scripts exist)
+__pycache__/
+*.py[cod]
+
+# Terraform (if infra-as-code is added later)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# SonarQube
+.sonar/
+.scannerwork/
+/.metadata/
