@@ -23,16 +23,16 @@ This application implements a complete, production-grade protocol bridge inspire
 ┌──────────────────────┐          ┌────────────────────────────────────────────────────────┐
 │                      │          │                                                        │
 │  Client Applications │          │  ┌──────────────────────┐    ┌──────────────────────┐  │
-│  (Web / Mobile / UI) │          │  │ Inbound HTTP Adapter │    │ Protocol Transformer │  │
-│                      │          │  │ (LoanBridgeController│───►│ (JSON ➔ Canonical)   │  │
+│  (Web / Mobile / UI) │          │  │ Inbound HTTP Adapter │    │ Service Layer        │  │
+│                      │          │  │ (LoanBridgeController│───►│ (LoanBridgeService)  │  │
 └──────────┬───────────┘          │  └──────────────────────┘    └──────────┬───────────┘  │
            │                      │                                         │              │
            │ 1. HTTP POST (JSON)  │                                         ▼              │
            │    /loan-application │  ┌──────────────────────┐    ┌──────────────────────┐  │
-           │                      │  │ Outbound Transformer │    │ Correlation Manager  │  │
-           │ 8. HTTP 200 (JSON)   │  │ (Canonical ➔ REST)   │◄───│ (JMSCorrelationID    │  │
-           │    Decision + Metrics│  └──────────────────────┘    │  CompletableFuture)  │  │
-           ▼                      │                                         ▲              │
+           │                      │  │ Protocol Transformer │    │ OsbProtocolBridge    │  │
+           │ 8. HTTP 200 (JSON)   │  │ (JSON ⇄ Canonical)   │◄───│ (JMS Request / Reply)│  │
+           │    Decision + Metrics│  └──────────────────────┘    └──────────┬───────────┘  │
+           ▼                      │                                         │              │
 ┌──────────────────────┐          └─────────────────────────────────────────┼──────────────┘
 │ Real-Time Cockpit    │                                                    │
 │ Web Dashboard        │                                     (JMS Request)  │  (JMS Reply)
@@ -60,11 +60,12 @@ This application implements a complete, production-grade protocol bridge inspire
 
 ## 🔧 How the OSB Protocol Bridge Pattern is Used in This Application
 
-In traditional Oracle Service Bus (OSB) configurations, the Protocol Bridge bridges transports across **Proxy Services**, **Pipeline Actions**, and **Business Services**. This Java application maps each OSB construct into clean, idiomatic Spring Boot and JMS abstractions:
+In traditional Oracle Service Bus (OSB) configurations, the Protocol Bridge bridges transports across **Proxy Services**, **Pipeline Actions**, and **Business Services**. This Java application maps each OSB construct into clean, idiomatic Spring Boot, Service Layer, and JMS abstractions:
 
 | OSB Concept | Application Component | Responsibility & Implementation |
 | :--- | :--- | :--- |
-| **Inbound Proxy Service** | [`LoanBridgeController`](src/main/java/com/hexaware/protocolbridge/controller/LoanBridgeController.java) | Terminates inbound HTTP REST connections, validates payload constraints (`@Valid`), extracts client headers (`X-Correlation-ID`), and handles client thread execution. |
+| **Inbound Proxy Service** | [`LoanBridgeController`](src/main/java/com/hexaware/protocolbridge/controller/LoanBridgeController.java) | Terminates inbound HTTP REST connections, validates payload constraints (`@Valid`), extracts client headers (`X-Correlation-ID`), and delegates directly to the Service Layer without executing business/messaging methods directly. |
+| **Business Service Layer** | [`LoanBridgeService`](src/main/java/com/hexaware/protocolbridge/service/LoanBridgeService.java) / [`LoanBridgeServiceImpl`](src/main/java/com/hexaware/protocolbridge/service/impl/LoanBridgeServiceImpl.java) | Decouples the presentation controller from low-level bridge orchestration. Coordinates synchronous & asynchronous loan application workflows, correlation IDs, audit querying, and active metrics collation. |
 | **Pipeline Request Actions** | [`ProtocolTransformer`](src/main/java/com/hexaware/protocolbridge/bridge/ProtocolTransformer.java) | Replaces OSB XQuery/XSLT transformations. Translates client JSON into the Canonical Enterprise format ([`CanonicalLoanMessage`](src/main/java/com/hexaware/protocolbridge/model/CanonicalLoanMessage.java)), computes business metrics (LTV and DTI ratios), and masks sensitive data (SSN). |
 | **Transport Protocol Switch** | [`OsbProtocolBridge`](src/main/java/com/hexaware/protocolbridge/bridge/OsbProtocolBridge.java) | Switches transport protocol from HTTP to JMS. Stamps transport headers (`X_SOURCE_PROTOCOL`, `X_TARGET_ENGINE`, `X_INGRESS_TIMESTAMP`) and enqueues onto `freddie.lpa.loan.request.queue`. |
 | **Request-Reply Correlator** | [`SyncToAsyncBridgeManager`](src/main/java/com/hexaware/protocolbridge/bridge/SyncToAsyncBridgeManager.java) | Registers a non-blocking `CompletableFuture` in a thread-safe registry keyed by `JMSCorrelationID`. When the reply listener receives a decision on `freddie.lpa.loan.reply.queue`, it correlates the message and completes the waiting future. |
@@ -85,6 +86,7 @@ sequenceDiagram
     autonumber
     actor Client as Client (Web / Mobile)
     participant Ctrl as LoanBridgeController
+    participant Svc as LoanBridgeService
     participant Bridge as OsbProtocolBridge
     participant Corr as SyncToAsyncBridgeManager
     participant ReqQ as JMS Request Queue
@@ -94,33 +96,36 @@ sequenceDiagram
     participant WS as WebSocket Clients
 
     Client->>Ctrl: 1. POST /api/v1/bridge/loan-application/sync (JSON)
-    Ctrl->>Bridge: 2. bridgeSyncLoanApplication(request, correlationId)
-    Note over Bridge: 3. Transform JSON ➔ CanonicalLoanMessage<br/>Compute LTV & DTI ratios, Mask SSN
-    Bridge->>Corr: 4. registerPendingRequest(correlationId) -> CompletableFuture
-    Bridge->>ReqQ: 5. JMS Send to freddie.lpa.loan.request.queue<br/>(Set JMSCorrelationID, JMSReplyTo)
-    Bridge->>Topic: 6. Multicast Notification Event (SUBMITTED)
-    Topic-->>WS: 7. Forward to /topic/live-events
+    Ctrl->>Svc: 2. processSyncLoanApplication(request, correlationId)
+    Svc->>Bridge: 3. bridgeSyncLoanApplication(request, correlationId)
+    Note over Bridge: 4. Transform JSON ➔ CanonicalLoanMessage<br/>Compute LTV & DTI ratios, Mask SSN
+    Bridge->>Corr: 5. registerPendingRequest(correlationId) -> CompletableFuture
+    Bridge->>ReqQ: 6. JMS Send to freddie.lpa.loan.request.queue<br/>(Set JMSCorrelationID, JMSReplyTo)
+    Bridge->>Topic: 7. Multicast Notification Event (SUBMITTED)
+    Topic-->>WS: 8. Forward to /topic/live-events
     
-    ReqQ->>AUS: 8. @JmsListener consumes CanonicalLoanMessage
-    Note over AUS: 9. Underwriting Rules Execution<br/>Evaluate FICO, LTV, DTI & Risk Grade
-    AUS->>RepQ: 10. JMS Send CanonicalUnderwritingDecision<br/>with identical JMSCorrelationID
+    ReqQ->>AUS: 9. @JmsListener consumes CanonicalLoanMessage
+    Note over AUS: 10. Underwriting Rules Execution<br/>Evaluate FICO, LTV, DTI & Risk Grade
+    AUS->>RepQ: 11. JMS Send CanonicalUnderwritingDecision<br/>with identical JMSCorrelationID
     
-    RepQ->>Corr: 11. @JmsListener onReplyMessage()
-    Note over Corr: 12. Lookup & match JMSCorrelationID<br/>pendingFuture.complete(decision)
-    Corr-->>Bridge: 13. Returns CanonicalUnderwritingDecision
-    Note over Bridge: 14. Transform Canonical ➔ LoanDecisionResponse<br/>Calculate hop transit & SLA latencies
-    Bridge-->>Ctrl: 15. Return LoanDecisionResponse DTO
-    Ctrl-->>Client: 16. HTTP 200 OK (Decision + Hop Telemetry)
+    RepQ->>Corr: 12. @JmsListener onReplyMessage()
+    Note over Corr: 13. Lookup & match JMSCorrelationID<br/>pendingFuture.complete(decision)
+    Corr-->>Bridge: 14. Returns CanonicalUnderwritingDecision
+    Note over Bridge: 15. Transform Canonical ➔ LoanDecisionResponse<br/>Calculate hop transit & SLA latencies
+    Bridge-->>Svc: 16. CompletableFuture<LoanDecisionResponse>
+    Svc-->>Ctrl: 17. Return CompletableFuture
+    Ctrl-->>Client: 18. HTTP 200 OK (Decision + Hop Telemetry)
 ```
 
 **Step Breakdown**:
 1. **HTTP Ingress**: Client submits `LoanApplicationRequest` (e.g., $380,000 loan, $500,000 property value, 775 FICO).
-2. **Payload & Canonical Transformation**: The bridge calculates LTV (76.0%) and DTI (19.31%), creates a canonical enterprise object, and generates correlation ID (e.g., `LP-A2CCCFAF`).
-3. **Correlation Waiter Registration**: The bridge registers an asynchronous `CompletableFuture` with a 6,000ms SLA timeout.
-4. **JMS Dispatch**: Enqueued to `freddie.lpa.loan.request.queue` with transport properties (`X_SOURCE_PROTOCOL=HTTP_REST`).
-5. **Backend Processing**: `AusUnderwritingEngine` simulates core Freddie Mac LPA rules, determines risk tier (`ACCEPT - LOW_RISK_PRIME`), sets base rate (6.125%), and produces conditions.
-6. **Reply & Correlation Matching**: The decision is published to `freddie.lpa.loan.reply.queue`. The bridge listener matches `JMSCorrelationID` and wakes up the waiting HTTP caller thread.
-7. **Response Transformation & Egress**: Returns `HTTP 200 OK` with full decision details and hop latency breakdown (`totalBridgeLatencyMs`, `backendProcessingMs`, `queueHopTransitMs`).
+2. **Service Layer Mediation**: `LoanBridgeController` delegates to `LoanBridgeService.processSyncLoanApplication(...)`.
+3. **Payload & Canonical Transformation**: The bridge calculates LTV (76.0%) and DTI (19.31%), creates a canonical enterprise object, and generates correlation ID (e.g., `LP-A2CCCFAF`).
+4. **Correlation Waiter Registration**: The bridge registers an asynchronous `CompletableFuture` with a 6,000ms SLA timeout.
+5. **JMS Dispatch**: Enqueued to `freddie.lpa.loan.request.queue` with transport properties (`X_SOURCE_PROTOCOL=HTTP_REST`).
+6. **Backend Processing**: `AusUnderwritingEngine` simulates core Freddie Mac LPA rules, determines risk tier (`ACCEPT - LOW_RISK_PRIME`), sets base rate (6.125%), and produces conditions.
+7. **Reply & Correlation Matching**: The decision is published to `freddie.lpa.loan.reply.queue`. The bridge listener matches `JMSCorrelationID` and wakes up the waiting HTTP caller thread.
+8. **Response Transformation & Egress**: Returns `HTTP 200 OK` with full decision details and hop latency breakdown (`totalBridgeLatencyMs`, `backendProcessingMs`, `queueHopTransitMs`).
 
 ---
 
@@ -159,17 +164,21 @@ sequenceDiagram
     autonumber
     actor Client as External Client
     participant Ctrl as LoanBridgeController
+    participant Svc as LoanBridgeService
     participant Bridge as OsbProtocolBridge
     participant ReqQ as JMS Request Queue
     participant Topic as JMS Topic
     participant WS as WebSocket Frontend Dashboard
 
     Client->>Ctrl: 1. POST /api/v1/bridge/loan-application/async (JSON)
-    Ctrl->>Bridge: 2. Enqueue message to JMS Request Queue
-    Bridge->>ReqQ: 3. Dispatch to freddie.lpa.loan.request.queue
-    Ctrl-->>Client: 4. Immediate HTTP 202 Accepted (Tracking Ticket: LP-ASYNC-XXXX)
-    Bridge->>Topic: 5. Publish Event (SUBMITTED)
-    Topic-->>WS: 6. WebSocket Push /topic/live-events (Real-time update)
+    Ctrl->>Svc: 2. processAsyncLoanApplication(request, correlationId)
+    Note over Svc: 3. Generate correlationId ticket & track ingestion
+    Svc->>Bridge: 4. bridgeSyncLoanApplication(request, correlationId)
+    Bridge->>ReqQ: 5. Dispatch to freddie.lpa.loan.request.queue
+    Bridge->>Topic: 6. Publish Event (SUBMITTED)
+    Topic-->>WS: 7. WebSocket Push /topic/live-events (Real-time update)
+    Svc-->>Ctrl: 8. Return AsyncLoanSubmissionResponse
+    Ctrl-->>Client: 9. Immediate HTTP 202 Accepted (Tracking Ticket: LP-ASYNC-XXXX)
 ```
 
 ---
@@ -355,8 +364,13 @@ OSB_Protocal_Bridge_Pattern_Realtime_App/
 │   │   │   │   ├── CanonicalLoanMessage.java     # Enterprise Canonical Model (JMS Payload)
 │   │   │   │   ├── CanonicalUnderwritingDecision.java # Backend AUS response payload
 │   │   │   │   ├── LoanDecisionResponse.java     # Outbound client REST DTO (JSON)
+│   │   │   │   ├── AsyncLoanSubmissionResponse.java # Asynchronous tracking ticket response DTO
 │   │   │   │   ├── BridgeAuditLog.java           # Granular hop transition audit model
 │   │   │   │   └── BridgeMetrics.java            # Operational telemetry snapshot
+│   │   │   ├── service/
+│   │   │   │   ├── LoanBridgeService.java        # Service layer contract
+│   │   │   │   └── impl/
+│   │   │   │       └── LoanBridgeServiceImpl.java # Business orchestration & decoupling
 │   │   │   ├── bridge/
 │   │   │   │   ├── OsbProtocolBridge.java        # Core Protocol Bridge orchestrator
 │   │   │   │   ├── ProtocolTransformer.java      # JSON <-> Canonical payload transformer
@@ -376,5 +390,9 @@ OSB_Protocal_Bridge_Pattern_Realtime_App/
 │   │           └── js/app.js                 # Interactive controls, animations & polling
 │   └── test/
 │       └── java/com/hexaware/protocolbridge/
-│           └── OsbProtocolBridgeIntegrationTest.java # End-to-end integration test suite
+│           ├── OsbProtocolBridgeIntegrationTest.java # End-to-end integration test suite
+│           ├── controller/
+│           │   └── LoanBridgeControllerTest.java     # Controller layer unit tests
+│           └── service/
+│               └── LoanBridgeServiceTest.java        # Service layer unit tests
 ```
